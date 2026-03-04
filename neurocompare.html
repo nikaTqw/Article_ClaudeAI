@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroCompare — Объективное сравнение нейросетей</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white: #FFFFFF;
+    --bg: #F7F8FC;
+    --text: #1E1E1E;
+    --text-muted: #6B7280;
+    --accent: #4A6CF7;
+    --accent-light: #EEF1FE;
+    --accent-dark: #3451d1;
+    --purple: #7C3AED;
+    --border: #E5E7EB;
+    --card-shadow: 0 2px 16px rgba(74,108,247,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    --card-shadow-hover: 0 8px 32px rgba(74,108,247,0.13), 0 2px 8px rgba(0,0,0,0.06);
+    --radius: 16px;
+    --radius-sm: 8px;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--white);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 68px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-icon svg { width: 18px; height: 18px; }
+
+  nav { display: flex; gap: 6px; align-items: center; }
+  nav a {
+    font-size: 14px; font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  nav a:hover { color: var(--text); background: var(--bg); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(74,108,247,0.3); }
+  .btn-lg {
+    padding: 16px 36px;
+    font-size: 17px;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(74,108,247,0.35);
+  }
+  .btn-lg:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(74,108,247,0.4); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 90px 40px 80px;
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .hero-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 13px; font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+    letter-spacing: 0.3px;
+  }
+  .hero-label::before {
+    content: '';
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 4vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 20px;
+  }
+  h1 span { color: var(--accent); }
+
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 36px;
+    max-width: 480px;
+  }
+
+  .hero-stats {
+    display: flex; gap: 32px;
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .hero-stat-num {
+    font-family: var(--font-display);
+    font-size: 28px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+  .hero-stat-num span { color: var(--accent); }
+  .hero-stat-label { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* CHART CARD */
+  .chart-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--purple));
+  }
+
+  .chart-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .chart-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+  .chart-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  .chart-badge {
+    background: #ECFDF5; color: #059669;
+    font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+  }
+
+  /* SVG Chart */
+  .chart-wrap { position: relative; }
+  #heroChart { width: 100%; height: 200px; overflow: visible; }
+
+  .chart-legend {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 16px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* LOGO CLOUD */
+  .logo-cloud {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 20px;
+  }
+  .logo-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .logo-chip:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74,108,247,0.15);
+  }
+  .logo-chip-icon {
+    width: 20px; height: 20px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+
+  /* ── SECTION WRAPPER ── */
+  section { padding: 80px 40px; }
+  .section-inner { max-width: 1280px; margin: 0 auto; }
+
+  .section-label {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .section-desc {
+    font-size: 16px; color: var(--text-muted);
+    max-width: 520px; line-height: 1.7;
+    margin-bottom: 40px;
+  }
+
+  /* ── TABS ── */
+  .tabs-section { background: var(--bg); }
+
+  .tabs {
+    display: flex; gap: 4px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    display: inline-flex;
+    margin-bottom: 36px;
+  }
+  .tab {
+    padding: 10px 24px;
+    border-radius: 9px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    font-family: var(--font-body);
+  }
+  .tab.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(74,108,247,0.3);
+  }
+  .tab:hover:not(.active) { color: var(--text); background: var(--bg); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+  /* MODEL CARDS */
+  .model-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    transition: all 0.25s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .model-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-3px);
+    border-color: var(--accent);
+  }
+
+  .model-card-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .model-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+
+  .model-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+  .badge-top { background: #FEF3C7; color: #D97706; }
+  .badge-new { background: #DCFCE7; color: #16A34A; }
+  .badge-pro { background: var(--accent-light); color: var(--accent); }
+
+  .model-name {
+    font-family: var(--font-display);
+    font-size: 17px; font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .model-desc {
+    font-size: 13px; color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .model-rating {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 16px;
+  }
+  .stars { color: #F59E0B; font-size: 14px; letter-spacing: 2px; }
+  .rating-num { font-size: 13px; font-weight: 700; }
+  .rating-count { font-size: 12px; color: var(--text-muted); }
+
+  .model-tags {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .model-tag {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px;
+    background: var(--bg);
+    border-radius: 20px;
+    color: var(--text-muted);
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-section { background: var(--white); }
+
+  .compare-filters {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 28px;
+    align-items: center;
+  }
+  .compare-filters label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    padding: 8px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .compare-filters label:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .compare-filters input[type=checkbox] { accent-color: var(--accent); }
+  .filter-label { font-size: 13px; color: var(--text-muted); margin-right: 4px; }
+
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr { background: var(--bg); }
+  th {
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+  tbody tr.hidden-row { display: none; }
+
+  td {
+    padding: 16px 20px;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  .td-model {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .td-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .td-name { font-weight: 600; font-size: 14px; }
+  .td-sub { font-size: 12px; color: var(--text-muted); }
+
+  .score-bar {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .bar-track {
+    width: 80px; height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--purple));
+    transition: width 0.6s ease;
+  }
+
+  .tag-yes { color: #16A34A; font-weight: 700; font-size: 13px; }
+  .tag-no { color: #9CA3AF; font-size: 13px; }
+  .tag-part { color: #D97706; font-weight: 600; font-size: 13px; }
+
+  .price-badge {
+    background: #F0FDF4;
+    color: #15803D;
+    font-size: 12px; font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+
+  /* ── TESTIMONIALS ── */
+  .testimonials-section { background: var(--bg); }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  .testimonial-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s;
+  }
+  .testimonial-card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); }
+
+  .testimonial-card::after {
+    content: '"';
+    position: absolute;
+    right: 24px; top: 16px;
+    font-size: 120px;
+    color: var(--accent-light);
+    font-family: Georgia, serif;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .metric-highlight {
+    font-family: var(--font-display);
+    font-size: 52px; font-weight: 800;
+    letter-spacing: -2px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .testimonial-text {
+    font-size: 15px; color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    position: relative; z-index: 1;
+  }
+
+  .testimonial-author {
+    display: flex; align-items: center; gap: 14px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .author-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .author-name { font-weight: 700; font-size: 14px; }
+  .author-role { font-size: 12px; color: var(--text-muted); }
+
+  .used-models {
+    display: flex; gap: 6px; margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .used-model-chip {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  /* ── CTA ── */
+  .cta-section {
+    background: linear-gradient(135deg, #0F0F23 0%, #1a1060 50%, #0a1a4a 100%);
+    color: white;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 20% 50%, rgba(74,108,247,0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 50%, rgba(124,58,237,0.3) 0%, transparent 50%);
+  }
+
+  .cta-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+  .cta-section h2 { color: white; font-size: clamp(30px, 4vw, 46px); margin-bottom: 16px; }
+  .cta-sub { color: rgba(255,255,255,0.65); font-size: 17px; margin-bottom: 40px; line-height: 1.7; }
+  .cta-note { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 16px; }
+
+  /* Floating particles */
+  .particles {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .particle {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--text);
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 32px 40px;
+    font-size: 13px;
+  }
+  footer strong { color: rgba(255,255,255,0.9); }
+
+  /* ── ANIMATIONS ── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Tooltip */
+  .tooltip-point {
+    position: relative;
+    cursor: pointer;
+  }
+  .tooltip-box {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+  }
+  .tooltip-box::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--text);
+  }
+  .tooltip-point:hover .tooltip-box { opacity: 1; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; }
+    .tab-panel.active { grid-template-columns: repeat(2, 1fr); }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    nav { display: none; }
+    header { padding: 0 20px; }
+    section { padding: 60px 20px; }
+    .hero { padding: 60px 20px; }
+    table { font-size: 12px; }
+    th, td { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <a class="logo" href="#">
+    <div class="logo-icon">
+      <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="3" fill="white"/>
+        <path d="M9 2v2M9 14v2M2 9h2M14 9h2M4.22 4.22l1.41 1.41M12.37 12.37l1.41 1.41M12.37 5.63l1.41-1.41M4.22 13.78l1.41-1.41" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    NeuroCompare
+  </a>
+  <nav>
+    <a href="#models">Каталог моделей</a>
+    <a href="#compare">Сравнение</a>
+    <a href="#pricing">Цены</a>
+    <a href="#about">О проекте</a>
+  </nav>
+  <a href="#cta" class="btn">Начать бесплатно</a>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left fade-in">
+    <div class="hero-label">🚀 Обновлено: 50+ нейросетей</div>
+    <h1>Объективное сравнение нейросетей для <span>любых задач</span></h1>
+    <p class="hero-sub">Выбирайте идеальную модель по качеству, скорости и стоимости. Все популярные нейросети в одном месте.</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <a href="#models" class="btn btn-lg">Выбрать модель</a>
+      <a href="#compare" class="btn btn-lg" style="background:#fff;color:var(--accent);border:2px solid var(--border);box-shadow:none;">Сравнить →</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">50<span>+</span></div>
+        <div class="hero-stat-label">нейросетей</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">18<span>k</span></div>
+        <div class="hero-stat-label">пользователей</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">4.9<span>★</span></div>
+        <div class="hero-stat-label">средняя оценка</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right fade-in" style="transition-delay:0.15s;">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Соотношение цена / качество</div>
+          <div class="chart-sub">Топ-10 моделей • 2025</div>
+        </div>
+        <span class="chart-badge">↑ Обновлено</span>
+      </div>
+      <div class="chart-wrap">
+        <svg id="heroChart" viewBox="0 0 420 200" preserveAspectRatio="xMidYMid meet">
+          <!-- Grid lines -->
+          <line x1="40" y1="20" x2="40" y2="170" stroke="#E5E7EB" stroke-width="1"/>
+          <line x1="40" y1="170" x2="400" y2="170" stroke="#E5E7EB" stroke-width="1"/>
+          <line x1="40" y1="20" x2="400" y2="20" stroke="#E5E7EB" stroke-width="0.5" stroke-dasharray="4"/>
+          <line x1="40" y1="65" x2="400" y2="65" stroke="#E5E7EB" stroke-width="0.5" stroke-dasharray="4"/>
+          <line x1="40" y1="110" x2="400" y2="110" stroke="#E5E7EB" stroke-width="0.5" stroke-dasharray="4"/>
+
+          <!-- Y labels -->
+          <text x="32" y="24" font-size="9" fill="#9CA3AF" text-anchor="end">100</text>
+          <text x="32" y="69" font-size="9" fill="#9CA3AF" text-anchor="end">75</text>
+          <text x="32" y="114" font-size="9" fill="#9CA3AF" text-anchor="end">50</text>
+          <text x="32" y="174" font-size="9" fill="#9CA3AF" text-anchor="end">0</text>
+
+          <!-- Gradient defs -->
+          <defs>
+            <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#4A6CF7"/>
+              <stop offset="100%" style="stop-color:#7C3AED"/>
+            </linearGradient>
+            <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#4A6CF7;stop-opacity:0.15"/>
+              <stop offset="100%" style="stop-color:#4A6CF7;stop-opacity:0"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Area -->
+          <path d="M60,45 L97,70 L134,38 L171,55 L208,28 L245,62 L282,35 L319,48 L356,32 L393,22 L393,170 L60,170 Z" fill="url(#areaGrad)"/>
+
+          <!-- Line -->
+          <polyline points="60,45 97,70 134,38 171,55 208,28 245,62 282,35 319,48 356,32 393,22"
+            fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+
+          <!-- Data points with tooltips via foreignObject workaround - use circles with title -->
+          <!-- GPT-4 -->
+          <g class="tooltip-point">
+            <circle cx="60" cy="45" r="5" fill="#4A6CF7" stroke="white" stroke-width="2"/>
+            <text x="60" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">GPT-4</text>
+            <title>GPT-4o: 89/100</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="97" cy="70" r="5" fill="#4A6CF7" stroke="white" stroke-width="2"/>
+            <text x="97" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">Gemini</text>
+            <title>Gemini 1.5: 74/100</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="134" cy="38" r="5" fill="#7C3AED" stroke="white" stroke-width="2"/>
+            <text x="134" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">Claude</text>
+            <title>Claude 3 Opus: 92/100</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="171" cy="55" r="5" fill="#4A6CF7" stroke="white" stroke-width="2"/>
+            <text x="171" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">DALL-E</text>
+            <title>DALL-E 3: 82/100</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="208" cy="28" r="6" fill="#F59E0B" stroke="white" stroke-width="2"/>
+            <text x="208" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">MJ</text>
+            <title>Midjourney v6: 96/100 🏆</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="245" cy="62" r="5" fill="#4A6CF7" stroke="white" stroke-width="2"/>
+            <text x="245" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">SD</text>
+            <title>Stable Diffusion: 80/100</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="282" cy="35" r="5" fill="#7C3AED" stroke="white" stroke-width="2"/>
+            <text x="282" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">Llama</text>
+            <title>Llama 3: 93/100</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="319" cy="48" r="5" fill="#4A6CF7" stroke="white" stroke-width="2"/>
+            <text x="319" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">Yandex</text>
+            <title>YandexGPT: 85/100</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="356" cy="32" r="5" fill="#4A6CF7" stroke="white" stroke-width="2"/>
+            <text x="356" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">Mistral</text>
+            <title>Mistral Large: 94/100</title>
+          </g>
+          <g class="tooltip-point">
+            <circle cx="393" cy="22" r="5" fill="#4A6CF7" stroke="white" stroke-width="2"/>
+            <text x="393" y="185" font-size="8" fill="#9CA3AF" text-anchor="middle">Cohere</text>
+            <title>Cohere R+: 97/100</title>
+          </g>
+        </svg>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#4A6CF7;"></div>Текстовые</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7C3AED;"></div>Графические</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F59E0B;"></div>Топ выбор</div>
+      </div>
+    </div>
+
+    <div class="logo-cloud" style="margin-top:16px;">
+      <div class="logo-chip"><div class="logo-chip-icon" style="background:#10A37F;">G</div>GPT-4o</div>
+      <div class="logo-chip"><div class="logo-chip-icon" style="background:#D97706;">C</div>Claude</div>
+      <div class="logo-chip"><div class="logo-chip-icon" style="background:#EA4335;">G</div>Gemini</div>
+      <div class="logo-chip"><div class="logo-chip-icon" style="background:#1A1A2E;">MJ</div>Midjourney</div>
+      <div class="logo-chip"><div class="logo-chip-icon" style="background:#6B7280;">SD</div>Stable Diff.</div>
+      <div class="logo-chip"><div class="logo-chip-icon" style="background:#000;">D3</div>DALL-E 3</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODELS SECTION -->
+<section class="tabs-section" id="models">
+  <div class="section-inner">
+    <div class="section-label">Каталог</div>
+    <h2>Категории моделей</h2>
+    <p class="section-desc">Выберите тип задач и найдите идеальную нейросеть из нашей базы.</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('text', this)">💬 Текстовые</button>
+      <button class="tab" onclick="switchTab('image', this)">🎨 Графические</button>
+      <button class="tab" onclick="switchTab('av', this)">🎬 Аудио/Видео</button>
+    </div>
+
+    <!-- Text models -->
+    <div class="tab-panel active" id="tab-text">
+      <div class="model-card fade-in">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#E8F5F0;">🤖</div>
+          <span class="model-badge badge-top">ТОП</span>
+        </div>
+        <div class="model-name">GPT-4o</div>
+        <div class="model-desc">Флагманская мультимодальная модель OpenAI. Быстрее и дешевле GPT-4 Turbo, поддерживает текст, изображения и аудио.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-num">4.9</span>
+          <span class="rating-count">(2.4k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">128K токенов</span>
+          <span class="model-tag">Мультимодальный</span>
+          <span class="model-tag">API</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.1s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#FFF3E8;">🧠</div>
+          <span class="model-badge badge-pro">PRO</span>
+        </div>
+        <div class="model-name">Claude 3 Opus</div>
+        <div class="model-desc">Мощнейшая модель Anthropic для сложного анализа, длинных документов и глубоких рассуждений с минимальными галлюцинациями.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-num">4.8</span>
+          <span class="rating-count">(1.9k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">200K токенов</span>
+          <span class="model-tag">Анализ</span>
+          <span class="model-tag">Код</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.2s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#F0F4FF;">⚡</div>
+          <span class="model-badge badge-new">NEW</span>
+        </div>
+        <div class="model-name">Gemini 1.5 Pro</div>
+        <div class="model-desc">Google DeepMind. Рекордный контекст 1M токенов. Идеален для работы с большими документами, видео и кодом.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★☆</span>
+          <span class="rating-num">4.6</span>
+          <span class="rating-count">(1.2k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">1M токенов</span>
+          <span class="model-tag">Google</span>
+          <span class="model-tag">Видео</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.3s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#FFF8E8;">🌐</div>
+          <span class="model-badge badge-pro">RU</span>
+        </div>
+        <div class="model-name">YandexGPT 3</div>
+        <div class="model-desc">Российская языковая модель от Яндекс. Лучший в классе для работы с русскоязычными текстами, интегрирована с экосистемой Я.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★☆</span>
+          <span class="rating-num">4.4</span>
+          <span class="rating-count">(876 отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">Русский</span>
+          <span class="model-tag">B2B</span>
+          <span class="model-tag">Yandex Cloud</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image models -->
+    <div class="tab-panel" id="tab-image">
+      <div class="model-card fade-in">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#FFF0F5;">🎨</div>
+          <span class="model-badge badge-top">ТОП</span>
+        </div>
+        <div class="model-name">Midjourney v6</div>
+        <div class="model-desc">Эталон генерации изображений. Непревзойдённое художественное качество, фотореализм и детализация.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-num">4.9</span>
+          <span class="rating-count">(3.1k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">Арт</span>
+          <span class="model-tag">Фото</span>
+          <span class="model-tag">Discord</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.1s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#F0F8FF;">🖼️</div>
+          <span class="model-badge badge-new">NEW</span>
+        </div>
+        <div class="model-name">DALL-E 3</div>
+        <div class="model-desc">OpenAI. Точное следование промптам, нативная интеграция с ChatGPT. Идеален для бизнес-иллюстраций.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★☆</span>
+          <span class="rating-num">4.5</span>
+          <span class="rating-count">(1.8k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">ChatGPT</span>
+          <span class="model-tag">API</span>
+          <span class="model-tag">Точность</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.2s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#F5F0FF;">✨</div>
+          <span class="model-badge badge-pro">Open Source</span>
+        </div>
+        <div class="model-name">Stable Diffusion XL</div>
+        <div class="model-desc">Мощная open-source модель. Полный контроль, локальный запуск, тысячи LoRA-дообучений. Для профессионалов.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★☆</span>
+          <span class="rating-num">4.4</span>
+          <span class="rating-count">(2.5k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">Open Source</span>
+          <span class="model-tag">Локальный</span>
+          <span class="model-tag">Кастомизация</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.3s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#FFF5F0;">🔥</div>
+          <span class="model-badge badge-new">v3</span>
+        </div>
+        <div class="model-name">Flux.1</div>
+        <div class="model-desc">Новый претендент от Black Forest Labs. Превосходная анатомия, быстрая генерация, бесплатный базовый доступ.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-num">4.7</span>
+          <span class="rating-count">(1.1k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">Быстрый</span>
+          <span class="model-tag">Бесплатно</span>
+          <span class="model-tag">2025</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AV models -->
+    <div class="tab-panel" id="tab-av">
+      <div class="model-card fade-in">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#F0FFF4;">🎵</div>
+          <span class="model-badge badge-top">ТОП Аудио</span>
+        </div>
+        <div class="model-name">ElevenLabs</div>
+        <div class="model-desc">Лучший voice cloning и TTS. Реалистичные голоса, клонирование с 1 минуты аудио, поддержка 30+ языков.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-num">4.8</span>
+          <span class="rating-count">(2.2k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">TTS</span>
+          <span class="model-tag">Клонирование</span>
+          <span class="model-tag">30+ языков</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.1s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#F5F0FF;">🎬</div>
+          <span class="model-badge badge-new">NEW</span>
+        </div>
+        <div class="model-name">Sora</div>
+        <div class="model-desc">OpenAI. Генерация видео до 60 секунд. Реалистичная физика, сложные сцены, высокое разрешение.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★☆</span>
+          <span class="rating-num">4.5</span>
+          <span class="rating-count">(890 отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">Видео</span>
+          <span class="model-tag">60 сек</span>
+          <span class="model-tag">4K</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.2s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#FFF8E8;">🎙️</div>
+          <span class="model-badge badge-pro">Whisper</span>
+        </div>
+        <div class="model-name">Whisper v3</div>
+        <div class="model-desc">OpenAI. Точнейшая транскрибация речи. 99 языков, работа с шумом, бесплатная open-source версия.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-num">4.9</span>
+          <span class="rating-count">(3.4k отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">STT</span>
+          <span class="model-tag">99 языков</span>
+          <span class="model-tag">Open Source</span>
+        </div>
+      </div>
+      <div class="model-card fade-in" style="transition-delay:0.3s;">
+        <div class="model-card-top">
+          <div class="model-icon" style="background:#FFF0F5;">🎼</div>
+          <span class="model-badge badge-new">2025</span>
+        </div>
+        <div class="model-name">Udio</div>
+        <div class="model-desc">Генерация музыки по текстовому описанию. Профессиональное качество, любые жанры, коммерческая лицензия.</div>
+        <div class="model-rating">
+          <span class="stars">★★★★☆</span>
+          <span class="rating-num">4.6</span>
+          <span class="rating-count">(654 отзывов)</span>
+        </div>
+        <div class="model-tags">
+          <span class="model-tag">Музыка</span>
+          <span class="model-tag">Любой жанр</span>
+          <span class="model-tag">Коммерческий</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE TABLE -->
+<section class="compare-section" id="compare">
+  <div class="section-inner">
+    <div class="section-label">Сравнение</div>
+    <h2>Сравните характеристики</h2>
+    <p class="section-desc">Выберите модели для детального сравнения по ключевым метрикам.</p>
+
+    <div class="compare-filters">
+      <span class="filter-label">Модели:</span>
+      <label><input type="checkbox" checked onchange="toggleRow('gpt4')"> GPT-4o</label>
+      <label><input type="checkbox" checked onchange="toggleRow('claude')"> Claude 3 Opus</label>
+      <label><input type="checkbox" checked onchange="toggleRow('yandex')"> YandexGPT 3</label>
+      <label><input type="checkbox" checked onchange="toggleRow('mj')"> Midjourney v6</label>
+      <label><input type="checkbox" checked onchange="toggleRow('dalle')"> DALL-E 3</label>
+      <label><input type="checkbox" onchange="toggleRow('gemini')"> Gemini 1.5 Pro</label>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Модель</th>
+            <th>Контекст</th>
+            <th>Скорость</th>
+            <th>Цена / 1K токенов</th>
+            <th>Качество</th>
+            <th>Языки</th>
+            <th>Мультимодальность</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="row-gpt4">
+            <td>
+              <div class="td-model">
+                <div class="td-icon" style="background:#E8F5F0;">🤖</div>
+                <div><div class="td-name">GPT-4o</div><div class="td-sub">OpenAI</div></div>
+              </div>
+            </td>
+            <td>128K</td>
+            <td>120 т/с</td>
+            <td><span class="price-badge">$0.005</span></td>
+            <td>
+              <div class="score-bar">
+                <div class="bar-track"><div class="bar-fill" style="width:89%;"></div></div>
+                <span style="font-size:13px;font-weight:700;">89</span>
+              </div>
+            </td>
+            <td>50+</td>
+            <td><span class="tag-yes">✓ Да</span></td>
+          </tr>
+          <tr id="row-claude">
+            <td>
+              <div class="td-model">
+                <div class="td-icon" style="background:#FFF3E8;">🧠</div>
+                <div><div class="td-name">Claude 3 Opus</div><div class="td-sub">Anthropic</div></div>
+              </div>
+            </td>
+            <td>200K</td>
+            <td>85 т/с</td>
+            <td><span class="price-badge">$0.015</span></td>
+            <td>
+              <div class="score-bar">
+                <div class="bar-track"><div class="bar-fill" style="width:95%;"></div></div>
+                <span style="font-size:13px;font-weight:700;">95</span>
+              </div>
+            </td>
+            <td>40+</td>
+            <td><span class="tag-part">◐ Частично</span></td>
+          </tr>
+          <tr id="row-yandex">
+            <td>
+              <div class="td-model">
+                <div class="td-icon" style="background:#FFF8E8;">🌐</div>
+                <div><div class="td-name">YandexGPT 3</div><div class="td-sub">Яндекс</div></div>
+              </div>
+            </td>
+            <td>32K</td>
+            <td>200 т/с</td>
+            <td><span class="price-badge">₽0.40</span></td>
+            <td>
+              <div class="score-bar">
+                <div class="bar-track"><div class="bar-fill" style="width:78%;background:linear-gradient(90deg,#F59E0B,#D97706);"></div></div>
+                <span style="font-size:13px;font-weight:700;">78</span>
+              </div>
+            </td>
+            <td>RU, EN</td>
+            <td><span class="tag-no">✗ Нет</span></td>
+          </tr>
+          <tr id="row-mj">
+            <td>
+              <div class="td-model">
+                <div class="td-icon" style="background:#FFF0F5;">🎨</div>
+                <div><div class="td-name">Midjourney v6</div><div class="td-sub">Midjourney</div></div>
+              </div>
+            </td>
+            <td>—</td>
+            <td>~30 с/изображение</td>
+            <td><span class="price-badge">$0.08</span></td>
+            <td>
+              <div class="score-bar">
+                <div class="bar-track"><div class="bar-fill" style="width:97%;"></div></div>
+                <span style="font-size:13px;font-weight:700;">97</span>
+              </div>
+            </td>
+            <td>Universal</td>
+            <td><span class="tag-no">✗ Image only</span></td>
+          </tr>
+          <tr id="row-dalle">
+            <td>
+              <div class="td-model">
+                <div class="td-icon" style="background:#F0F8FF;">🖼️</div>
+                <div><div class="td-name">DALL-E 3</div><div class="td-sub">OpenAI</div></div>
+              </div>
+            </td>
+            <td>—</td>
+            <td>~20 с/изображение</td>
+            <td><span class="price-badge">$0.04</span></td>
+            <td>
+              <div class="score-bar">
+                <div class="bar-track"><div class="bar-fill" style="width:84%;"></div></div>
+                <span style="font-size:13px;font-weight:700;">84</span>
+              </div>
+            </td>
+            <td>Universal</td>
+            <td><span class="tag-no">✗ Image only</span></td>
+          </tr>
+          <tr id="row-gemini" class="hidden-row">
+            <td>
+              <div class="td-model">
+                <div class="td-icon" style="background:#F0F4FF;">⚡</div>
+                <div><div class="td-name">Gemini 1.5 Pro</div><div class="td-sub">Google</div></div>
+              </div>
+            </td>
+            <td>1M</td>
+            <td>110 т/с</td>
+            <td><span class="price-badge">$0.007</span></td>
+            <td>
+              <div class="score-bar">
+                <div class="bar-track"><div class="bar-fill" style="width:87%;"></div></div>
+                <span style="font-size:13px;font-weight:700;">87</span>
+              </div>
+            </td>
+            <td>40+</td>
+            <td><span class="tag-yes">✓ Да</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section">
+  <div class="section-inner">
+    <div class="section-label">Кейсы</div>
+    <h2>Как нейросети меняют рабочие процессы</h2>
+    <p class="section-desc">Реальные истории профессионалов, которые нашли идеальные инструменты через NeuroCompare.</p>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card fade-in">
+        <span class="metric-highlight">−60%</span>
+        <p class="testimonial-text">Сократили время создания иллюстраций на 60% благодаря подбору оптимальной графической модели. NeuroCompare помог быстро понять разницу между Midjourney и Stable Diffusion для наших конкретных задач — мы перестали тратить деньги вслепую.</p>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background:#FFF0F5;font-size:24px;">👩‍🎨</div>
+          <div>
+            <div class="author-name">Анна Соколова</div>
+            <div class="author-role">Senior Designer, Студия Pixel</div>
+          </div>
+        </div>
+        <div class="used-models">
+          <div class="used-model-chip" style="background:#FFF0F5;border-color:#FFD6E8;color:#D97706;">Midjourney v6</div>
+          <div class="used-model-chip" style="background:#F5F0FF;border-color:#DDD6FE;color:#7C3AED;">Stable Diffusion XL</div>
+        </div>
+      </div>
+
+      <div class="testimonial-card fade-in" style="transition-delay:0.15s;">
+        <span class="metric-highlight">5×</span>
+        <p class="testimonial-text">Ускорили анализ документов в 5 раз, выбрав GPT-4 для обработки текста. До этого мы пробовали три разные модели, теряя время. Сравнительная таблица на NeuroCompare дала нам ответ за 10 минут — контекст 128K решил нашу задачу идеально.</p>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background:#EEF2FF;font-size:24px;">👨‍💼</div>
+          <div>
+            <div class="author-name">Михаил Петров</div>
+            <div class="author-role">Data Analyst, FinTech Pro</div>
+          </div>
+        </div>
+        <div class="used-models">
+          <div class="used-model-chip" style="background:#E8F5F0;border-color:#A7F3D0;color:#059669;">GPT-4o</div>
+          <div class="used-model-chip" style="background:#FFF3E8;border-color:#FDE68A;color:#D97706;">Claude 3 Opus</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="cta">
+  <div class="particles" id="particles"></div>
+  <div class="section-inner">
+    <div class="cta-inner">
+      <div class="hero-label" style="background:rgba(74,108,247,0.3);color:#a5b4fc;margin-bottom:24px;display:inline-flex;">
+        🎯 Бесплатный доступ уже сегодня
+      </div>
+      <h2>Начните тестировать нейросети прямо сейчас</h2>
+      <p class="cta-sub">Сравнивайте, выбирайте и интегрируйте лучшие модели для своих задач. Никакой лишней настройки — просто выберите и попробуйте.</p>
+      <a href="#" class="btn btn-lg" style="background:linear-gradient(135deg,#4A6CF7,#7C3AED);font-size:18px;padding:18px 44px;box-shadow:0 8px 32px rgba(74,108,247,0.4);">
+        Начать тестирование →
+      </a>
+      <p class="cta-note">Бесплатно, без регистрации · 3 тестовых запроса в день</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>© 2025 <strong>NeuroCompare</strong> — объективное сравнение нейросетей &nbsp;·&nbsp; Все данные обновляются еженедельно</div>
+</footer>
+
+<script>
+// Tab switching
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  // re-trigger fade-in
+  document.querySelectorAll('#tab-' + id + ' .fade-in').forEach((el, i) => {
+    el.classList.remove('visible');
+    setTimeout(() => el.classList.add('visible'), i * 80);
+  });
+}
+
+// Table row toggle
+function toggleRow(id) {
+  const row = document.getElementById('row-' + id);
+  if (row) row.classList.toggle('hidden-row');
+}
+
+// Intersection Observer for fade-in
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const delay = parseFloat(getComputedStyle(e.target).transitionDelay) * 1000 || 0;
+      setTimeout(() => e.target.classList.add('visible'), delay);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Trigger initial visible elements
+setTimeout(() => {
+  document.querySelectorAll('.hero .fade-in').forEach(el => el.classList.add('visible'));
+  document.querySelectorAll('#tab-text .fade-in').forEach(el => el.classList.add('visible'));
+}, 100);
+
+// Particles
+const container = document.getElementById('particles');
+for (let i = 0; i < 20; i++) {
+  const p = document.createElement('div');
+  p.classList.add('particle');
+  p.style.cssText = `
+    left: ${Math.random() * 100}%;
+    width: ${2 + Math.random() * 4}px;
+    height: ${2 + Math.random() * 4}px;
+    animation-duration: ${6 + Math.random() * 8}s;
+    animation-delay: ${Math.random() * 8}s;
+    opacity: ${0.2 + Math.random() * 0.6};
+  `;
+  container.appendChild(p);
+}
+
+// Chart animated draw
+window.addEventListener('load', () => {
+  const circles = document.querySelectorAll('#heroChart circle');
+  circles.forEach((c, i) => {
+    c.style.opacity = '0';
+    c.style.transform = 'scale(0)';
+    c.style.transformOrigin = `${c.getAttribute('cx')}px ${c.getAttribute('cy')}px`;
+    c.style.transition = `opacity 0.3s ${i * 0.08}s, transform 0.3s ${i * 0.08}s`;
+    setTimeout(() => {
+      c.style.opacity = '1';
+      c.style.transform = 'scale(1)';
+    }, 500 + i * 80);
+  });
+});
+</script>
+</body>
+</html>
