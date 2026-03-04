@@ -1,1 +1,1 @@
-# Article_ClaudeAI
+# Сайт сгенерирован Claude.ai
